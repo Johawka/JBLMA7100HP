@@ -1,0 +1,2 @@
+# Request surround mode (0x08 F0). IDs: 01=Dolby Surround, 02=DTS Neural:X, 03=Stereo2.0, 04=Stereo2.1, 05=All Stereo, 06=Native, 07=PLII(MA510):contentReference[oaicite:25]{index=25}.
+\x23\x08\x01\xF0\x0D

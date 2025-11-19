@@ -1,0 +1,2 @@
+# Disable party mode (0x09 00)
+\x23\x09\x01\x00\x0D

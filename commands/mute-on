@@ -1,0 +1,2 @@
+# Set/Request mute: set ON (0x07 01). Query is (0x07 F0):contentReference[oaicite:16]{index=16}.
+\x23\x07\x01\x01\x0D

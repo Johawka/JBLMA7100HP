@@ -1,0 +1,2 @@
+# Request DSP version string (0x02 F2)
+\x23\x02\x01\xF2\x0D

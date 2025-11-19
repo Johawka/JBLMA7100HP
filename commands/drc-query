@@ -1,0 +1,2 @@
+# Compression (DRC) query (0x10 F0). 00=OFF, 01=ON (710/7100/9100):contentReference[oaicite:35]{index=35}.
+\x23\x10\x01\xF0\x0D

@@ -1,0 +1,2 @@
+# Query party mode state (0x09 F0). 0x00=Off, 0x01=On.
+\x23\x09\x01\xF0\x0D

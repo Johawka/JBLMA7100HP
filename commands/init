@@ -1,0 +1,2 @@
+# Identify & register client (CmdID 0x50, Data=F0). AVR replies with model ID:contentReference[oaicite:2]{index=2}.
+\x23\x50\x01\xF0\x0D

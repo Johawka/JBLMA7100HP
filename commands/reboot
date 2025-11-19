@@ -1,0 +1,2 @@
+# Reboot AVR (0x52 0xAA 0xAA). DANGEROUS — use av reboot --force.
+\x23\x52\x02\xAA\xAA\x0D

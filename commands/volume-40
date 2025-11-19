@@ -1,0 +1,2 @@
+# Set master volume to 40 (0x06 0x28 = 40):contentReference[oaicite:19]{index=19}.
+\x23\x06\x01\x28\x0D

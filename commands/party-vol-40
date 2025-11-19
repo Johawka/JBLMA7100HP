@@ -1,0 +1,2 @@
+# Set party output volume = 40 (0x0A 0x28)
+\x23\x0A\x01\x28\x0D

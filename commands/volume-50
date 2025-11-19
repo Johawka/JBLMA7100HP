@@ -1,0 +1,2 @@
+# Set master volume to 50 (0x06 0x32 = 50)
+\x23\x06\x01\x32\x0D

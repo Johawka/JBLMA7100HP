@@ -1,0 +1,2 @@
+# Room EQ query (0x0D F0). Values: 00=disabled, 01=EZ Set EQ, 02=Dirac Live (7100/9100):contentReference[oaicite:30]{index=30}.
+\x23\x0D\x01\xF0\x0D

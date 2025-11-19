@@ -1,0 +1,2 @@
+# Heartbeat (0x51). Spec note: example shows DataLen 00; used to keepalive/reset standby timer:contentReference[oaicite:38]{index=38}.
+\x23\x51\x00\x0D

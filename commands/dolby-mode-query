@@ -1,0 +1,2 @@
+# Dolby Audio Mode query (0x0F F0). Values: 00=Off*, 01=Music, 02=Movie, 03=Night (710/7100/9100):contentReference[oaicite:32]{index=32}.
+\x23\x0F\x01\xF0\x0D

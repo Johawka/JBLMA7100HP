@@ -1,0 +1,2 @@
+# Request Bass EQ (0x0C F0). Range: 0x00–0x0C (0→+12dB), 0xFF–0xF4 (-1→-12dB)
+\x23\x0C\x01\xF0\x0D

@@ -1,0 +1,2 @@
+# Streaming server state query (0x11 F0). Data2: 00=Stopped, 01=Playing, 02=Paused. Data1=service id (e.g., 0D=Bluetooth, 16=Cast, 15=Spotify, 23=Roon, 21=Deezer, 22=Tidal, 26=AmazonMusic, 33=Pandora, etc.):contentReference[oaicite:37]{index=37}.
+\x23\x11\x01\xF0\x0D

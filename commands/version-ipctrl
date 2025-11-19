@@ -1,0 +1,2 @@
+# Request IP control version string (0x02 F0)
+\x23\x02\x01\xF0\x0D

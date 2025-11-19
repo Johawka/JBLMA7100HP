@@ -1,0 +1,2 @@
+# Display dim: Full brightness (0x01 00). Query is (0x01 F0):contentReference[oaicite:6]{index=6}.
+\x23\x01\x01\x00\x0D

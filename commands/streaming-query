@@ -1,0 +1,2 @@
+# Query streaming server state (0x11 F0). Response Data1=server ID, Data2=0=stopped/1=playing/2=paused.
+\x23\x11\x01\xF0\x0D

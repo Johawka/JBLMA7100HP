@@ -1,0 +1,2 @@
+# Request current main volume (0x06 F0). Response Data1=0x00–0x63 (0–99).
+\x23\x06\x01\xF0\x0D

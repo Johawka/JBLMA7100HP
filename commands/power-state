@@ -1,0 +1,2 @@
+# Request power state (0x00 F0). Data1: 00=standby, 01=on:contentReference[oaicite:3]{index=3}.
+\x23\x00\x01\xF0\x0D
