@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+# jblctl — tiny CLI to send JBL MA-Series IP commands over TCP:50000
+# - Commands are files in ./commands (first line may be a human hint starting with '#')
+# - We read the file, strip comments/blank lines, and send the raw \x.. bytes via netcat.
+# - AVR replies are printed as hex (e.g., 02-23-00-00-01-01-0D-). Use --decode to translate.
+
+set -euo pipefail
+
+# -----------------------------
+# Constants / Defaults
+# -----------------------------
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+CMD_DIR="${SCRIPT_DIR}/commands"
+DEFAULT_IP="${JBL_IP:-192.168.1.165}"    # env var overrides default
+PORT="${JBL_PORT:-50000}"
+TIMEOUT="${JBL_TIMEOUT:-3}"              # netcat connect/read timeout in seconds
+NC_BIN="${NC_BIN:-nc}"                   # allow override (e.g., ncat)
+
+# -----------------------------
+# Helpers: UI
+# -----------------------------
+usage() {
+  cat <<EOF
+Usage:
+  $(basename "$0") <command> [options]
+  $(basename "$0") --list
+  $(basename "$0") --show <command>
+
+Commands live in: ${CMD_DIR}
+Each command file:
+  - First line starting with '#' is a human hint (shown before send).
+  - Following lines are the raw bytes (e.g. \\x23\\x05\\x01\\x02\\x0D).
+
+Options:
+  --ip <addr>     Target AVR IP (defaults to \$JBL_IP or ${DEFAULT_IP})
+  --quiet         Suppress hint/echo of bytes before sending
+  --force         Allow dangerous commands (reboot/factory-reset)
+  --decode        Translate the AVR reply using decode.sh (if present)
+  --timeout <s>   Netcat timeout in seconds (default: ${TIMEOUT})
+  --help          Show this help
+
+Utility:
+  --list          List available commands with hints
+  --show <cmd>    Show bytes and hint for a command (no send)
+
+Env overrides:
+  JBL_IP, JBL_PORT, JBL_TIMEOUT, NC_BIN
+
+Examples:
+  $(basename "$0") init
+  $(basename "$0") all-stereo --decode
+  $(basename "$0") source-hdmi2 --ip 192.168.1.200
+  JBL_IP=192.168.1.99 $(basename "$0") power-state
+EOF
+}
+
+die() { echo "error: $*" >&2; exit 1; }
+
+# -----------------------------
+# Helpers: Files / Bytes
+# -----------------------------
+assert_requirements() {
+  command -v "${NC_BIN}" >/dev/null || die "netcat '${NC_BIN}' not found"
+  command -v hexdump >/dev/null || die "hexdump not found"
+  [[ -d "${CMD_DIR}" ]] || die "commands directory not found: ${CMD_DIR}"
+}
+
+# Print first '# …' line or empty
+file_hint() {
+  local f="$1"
+  # Add "|| true" so a missing comment line doesn't kill the script under pipefail
+  grep -m1 -E '^[[:space:]]*#' "$f" 2>/dev/null | sed 's/^[[:space:]]*#\s*//' || true
+}
+
+
+# Return raw \x.. byte stream (strip comments/blank lines/CRs)
+file_bytes() {
+  local f="$1"
+  awk '
+    BEGIN{ORS=""}
+    /^[[:space:]]*#/ {next}        # skip comment lines
+    /^[[:space:]]*$/ {next}        # skip blank lines
+    {gsub(/\r/,""); print}
+  ' "$f"
+}
+
+list_cmds() {
+  shopt -s nullglob
+  for f in "${CMD_DIR}"/*; do
+    [[ -f "$f" ]] || continue
+    printf "%-22s %s\n" "$(basename "$f")" "$(file_hint "$f")"
+  done
+}
+
+show_cmd() {
+  local name="$1" f="${CMD_DIR}/$1"
+  [[ -f "$f" ]] || die "No such command: $1"
+  echo "Command: $1"
+  echo "IP     : ${IP}"
+  echo "Hint   : $(file_hint "$f")"
+  echo -n "Bytes  : "
+  file_bytes "$f"
+  echo
+}
+
+# -----------------------------
+# Send logic
+# -----------------------------
+send_cmd() {
+  local name="$1" f="${CMD_DIR}/$1"
+  [[ -f "$f" ]] || die "No such command: $1"
+
+  # Safety guard
+  if [[ "$name" =~ ^(reboot|factory-reset)$ ]] && [[ "${FORCE}" != "1" ]]; then
+    die "Refusing to send '$name' without --force"
+  fi
+
+  local hint bytes
+  hint="$(file_hint "$f")"
+  bytes="$(file_bytes "$f")"
+  [[ -z "$bytes" ]] && die "Command file '$name' contains no bytes"
+
+  if [[ "${QUIET}" != "1" ]]; then
+    [[ -n "$hint" ]] && echo "Hint  : $hint"
+    echo "Send  : $name  →  ${IP}:${PORT}"
+    echo "Bytes : $bytes"
+  fi
+
+  # Send, hex-print, and ensure a trailing newline so the prompt doesn't stick.
+  # -w TIMEOUT: overall timeout for connect + read
+  resp="$(
+    printf "%b" "$bytes" \
+      | "${NC_BIN}" -w "${TIMEOUT}" "${IP}" "${PORT}" \
+      | hexdump -v -e '1/1 "%02X-"'
+  )" || true
+  echo "${resp}"
+
+  # Optional decode (external helper)
+  if [[ "${DECODE}" == "1" ]]; then
+    local dec="${SCRIPT_DIR}/decode.sh"
+    if [[ -x "$dec" ]]; then
+      "$dec" "${resp}"
+    else
+      echo "(decode requested but ${dec} not found or not executable)"
+    fi
+  fi
+}
+
+# -----------------------------
+# Parse args
+# -----------------------------
+assert_requirements
+
+CMD=""                 # command file name (first non-flag)
+IP="${DEFAULT_IP}"
+QUIET=0
+FORCE=0
+DECODE=0
+
+# We’ll parse flags first, but keep the first non-flag as CMD
+i=1
+while [[ $i -le $# ]]; do
+  a="${!i}"
+  case "$a" in
+    --help|-h) usage; exit 0 ;;
+    --list)    list_cmds; exit 0 ;;
+    --show)
+      (( i++ <= $# )) || die "Missing arg for --show"
+      show_cmd "${!i}"
+      exit 0
+      ;;
+    --quiet)   QUIET=1 ;;
+    --force)   FORCE=1 ;;
+    --decode)  DECODE=1 ;;
+    --ip)
+      (( i++ <= $# )) || die "Missing arg for --ip"
+      IP="${!i}"
+      ;;
+    --timeout)
+      (( i++ <= $# )) || die "Missing arg for --timeout"
+      TIMEOUT="${!i}"
+      ;;
+    --*) die "Unknown option: $a" ;;
+    *)
+      # First non-flag becomes the command name (if not set yet)
+      [[ -z "$CMD" ]] && CMD="$a" || true
+      ;;
+  esac
+  ((i++))
+done
+
+[[ -n "$CMD" ]] || { usage; exit 1; }
+
+export QUIET FORCE DECODE
+send_cmd "$CMD"
