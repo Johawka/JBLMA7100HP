@@ -11,7 +11,7 @@ set -euo pipefail
 # -----------------------------
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CMD_DIR="${SCRIPT_DIR}/commands"
-DEFAULT_IP="${JBL_IP:-192.168.1.165}"    # env var overrides default
+DEFAULT_IP="${JBL_IP:-IPADDRESSHERE}"    # env var overrides default
 PORT="${JBL_PORT:-50000}"
 TIMEOUT="${JBL_TIMEOUT:-3}"              # netcat connect/read timeout in seconds
 NC_BIN="${NC_BIN:-nc}"                   # allow override (e.g., ncat)
